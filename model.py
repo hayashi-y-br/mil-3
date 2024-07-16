@@ -36,7 +36,7 @@ class Attention(nn.Module):
         x = x.squeeze(0)
 
         H = self.feature_extractor_part1(x)
-        H = H.view(-1, 50 * 3 * 3)
+        H = H.contiguous().view(-1, 50 * 3 * 3)
         H = self.feature_extractor_part2(H)  # KxM
 
         A = self.attention(H)  # Kx1
@@ -84,7 +84,7 @@ class Additive(nn.Module):
         x = x.squeeze(0)
 
         H = self.feature_extractor_part1(x)
-        H = H.view(-1, 50 * 3 * 3)
+        H = H.contiguous().view(-1, 50 * 3 * 3)
         H = self.feature_extractor_part2(H)  # KxM
 
         A = self.attention(H)  # Kx1
