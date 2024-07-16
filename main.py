@@ -117,7 +117,7 @@ def test():
             if k < 10:
                 X = X.detach().cpu()[0]
                 A = A.detach().cpu()[0]
-                y_hat = y_hat.detach().cpu()[0]
+                y_hat = y_hat.detach().cpu().int()[0]
 
                 if args.model == 'attention':
                     save_result(X, A, title=f'$y = {y}, \\hat{{y}} = {y_hat}$', filename=f'img_{y}_{k}')
