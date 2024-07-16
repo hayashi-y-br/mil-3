@@ -1,6 +1,7 @@
 from torch.utils.data import Dataset, Subset
 from torchvision import datasets, transforms
 
+
 class EMNIST(Dataset):
     def __init__(self, train=True):
         self.train = train
