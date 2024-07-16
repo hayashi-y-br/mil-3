@@ -1,4 +1,10 @@
-/data/*
+__pycache__
 *.sh
+
+/data/*
+/img/attention/*
+/img/additive/*
+/result/attention/*
+/result/additive/*
 
 !.gitkeep
