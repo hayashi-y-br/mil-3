@@ -98,4 +98,4 @@ class Additive(nn.Module):
         y_proba = torch.mean(P, dim=1)  # 1x3
         y_hat = torch.argmax(y_proba, dim=1).float()
 
-        return y_proba, y_hat, P
+        return y_proba, y_hat, torch.transpose(A, 1, 0), P
