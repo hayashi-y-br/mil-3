@@ -6,5 +6,7 @@ __pycache__
 /img/additive/*
 /result/attention/*
 /result/additive/*
+/visualization/attention/*
+/visualization/additive/*
 
 !.gitkeep
