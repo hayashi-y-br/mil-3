@@ -6,7 +6,7 @@ import torch.optim as optim
 from torchvision.utils import make_grid
 import matplotlib.pyplot as plt
 
-from dataset import EMNIST
+from dataset import MyDataset
 from model import Attention, Additive
 
 # Training settings
@@ -37,12 +37,12 @@ if args.cuda:
 print('Load Train and Test Set')
 loader_kwargs = {'num_workers': 1, 'pin_memory': True} if args.cuda else {}
 
-train_loader = torch.utils.data.DataLoader(EMNIST(train=True),
+train_loader = torch.utils.data.DataLoader(MyDataset(train=True),
                                            batch_size=args.batch_size,
                                            shuffle=True,
                                            **loader_kwargs)
 
-test_loader = torch.utils.data.DataLoader(EMNIST(train=False),
+test_loader = torch.utils.data.DataLoader(MyDataset(train=False),
                                           batch_size=1,
                                           shuffle=False,
                                           **loader_kwargs)
@@ -75,7 +75,7 @@ def train(epoch):
         for j, (X, y) in enumerate(zip(X_batch, y_batch)):
             X = X.unsqueeze(0)
             y = y.unsqueeze(0)
-            y_proba, y_hat, _ = model(X)
+            y_proba, y_hat, *_ = model(X)
             y_proba_list.append(y_proba)
             y_hat_list.append(y_hat)
         y_proba = torch.cat(y_proba_list, dim=0)
@@ -107,24 +107,23 @@ def test():
             if args.cuda:
                 X, y = X.cuda(), y.cuda()
 
-            y_proba, y_hat, A = model(X)
+            y_proba, y_hat, *Score = model(X)
             loss = loss_fn(y_proba, y)
             test_loss += loss.detach().cpu().item()
             test_error += 1. - (y_hat == y).detach().cpu().count_nonzero().item()
 
             y = y.detach().cpu()[0]
             k = cnt[y]
-            if k < 10:
+            if k < 1:
                 X = X.detach().cpu()[0]
-                A = A.detach().cpu()[0]
+                A = Score[0].detach().cpu()[0]
                 y_hat = y_hat.detach().cpu().int()[0]
-
-                if args.model == 'attention':
-                    save_result(X, A, title=f'$y = {y}, \\hat{{y}} = {y_hat}$', filename=f'img_{y}_{k}')
-                elif args.model == 'additive':
-                    A = torch.permute(A, (1, 0))
+                save_result(X, A, title=f'$y = {y}, \\hat{{y}} = {y_hat}$', filename=f'img_{y}_{k}')
+                if args.model == 'additive':
+                    P = Score[1].detach().cpu()[0]
+                    P = torch.permute(P, (1, 0))
                     for l in range(3):
-                        save_result(X, A[l], title=f'$y = {y}, \\hat{{y}} = {y_hat}, y\' = {l}$', filename=f'img_{y}_{k}_{l}')
+                        save_result(X, P[l], title=f'$y = {y}, \\hat{{y}} = {y_hat}, y\' = {l}$', filename=f'img_{y}_{k}_{l}', vmin=0, vmax=1)
                 cnt[y] += 1
 
     test_error /= len(test_loader)
@@ -133,7 +132,7 @@ def test():
     print('Test Set, Loss: {:.4f}, Test error: {:.4f}'.format(test_loss, test_error))
 
 
-def save_result(X, A, title=None, path=f'./img/{args.model}/', filename='img', mean=torch.tensor([0.5]), std=torch.tensor([0.5])):
+def save_result(X, A, title=None, path=f'./img/{args.model}/', filename='img', mean=torch.tensor([0.5]), std=torch.tensor([0.5]), vmin=None, vmax=None):
     X = make_grid(X, nrow=4, padding=0)
     X = X * std + mean
     X = torch.permute(X, (1, 2, 0))
@@ -146,10 +145,7 @@ def save_result(X, A, title=None, path=f'./img/{args.model}/', filename='img', m
     ax.imshow(X)
     xlim = ax.get_xlim()
     ylim = ax.get_ylim()
-    if args.model == 'attention':
-        ax.imshow(A, cmap='bwr', alpha=0.5, extent=[*xlim, *ylim])
-    elif args.model == 'additive':
-        ax.imshow(A, cmap='bwr', alpha=0.5, vmin=0, vmax=1, extent=[*xlim, *ylim])
+    ax.imshow(A, cmap='seismic', alpha=0.5, vmin=vmin, vmax=vmax, extent=[*xlim, *ylim])
     fig.subplots_adjust(left=0, right=1, bottom=0, top=0.9)
     fig.savefig(path + filename)
     plt.close(fig)
