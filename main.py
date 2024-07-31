@@ -102,7 +102,7 @@ def test():
     test_error = 0.
 
     with torch.no_grad():
-        cnt = np.zeros(3, dtype=int)
+        cnt = np.zeros(4, dtype=int)
         for i, (X, y) in enumerate(test_loader):
             if args.cuda:
                 X, y = X.cuda(), y.cuda()
@@ -114,7 +114,7 @@ def test():
 
             y = y.detach().cpu()[0]
             k = cnt[y]
-            if k < 1:
+            if k < 10:
                 X = X.detach().cpu()[0]
                 A = Score[0].detach().cpu()[0]
                 y_hat = y_hat.detach().cpu().int()[0]
@@ -122,7 +122,7 @@ def test():
                 if args.model == 'additive':
                     P = Score[1].detach().cpu()[0]
                     P = torch.permute(P, (1, 0))
-                    for l in range(3):
+                    for l in range(4):
                         save_result(X, P[l], title=f'$y = {y}, \\hat{{y}} = {y_hat}, y\' = {l}$', filename=f'img_{y}_{k}_{l}', vmin=0, vmax=1)
                 cnt[y] += 1
 
@@ -133,10 +133,33 @@ def test():
 
 
 def save_result(X, A, title=None, path=f'./img/{args.model}/', filename='img', mean=torch.tensor([0.5]), std=torch.tensor([0.5]), vmin=None, vmax=None):
-    X = make_grid(X, nrow=4, padding=0)
+    X = make_grid(X, nrow=10, padding=0)
     X = X * std + mean
     X = torch.permute(X, (1, 2, 0))
-    A = A.contiguous().view(4, 4)
+    A = A.contiguous().view(10, 10)
+
+    fig, ax = plt.subplots(figsize=(3.6, 4))
+    if title is not None:
+        fig.suptitle(title)
+    ax.axis('off')
+    ax.imshow(X)
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=0.9)
+    fig.savefig('./img_2/' + args.model + '/' + filename)
+    plt.close(fig)
+
+    fig, ax = plt.subplots(figsize=(3.6, 4))
+    if title is not None:
+        fig.suptitle(title)
+    ax.axis('off')
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    ax.imshow(A, cmap='Spectral_r', alpha=0.5, vmin=vmin, vmax=vmax, extent=[*xlim, *ylim])
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=0.9)
+    fig.savefig('./score/' + args.model  + '/' + filename)
+    plt.close(fig)
+    return
 
     fig, ax = plt.subplots(figsize=(3.6, 4))
     if title is not None:

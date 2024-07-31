@@ -28,7 +28,7 @@ class Attention(nn.Module):
         )
 
         self.classifier = nn.Sequential(
-            nn.Linear(self.M, 3),
+            nn.Linear(self.M, 4),
             nn.Softmax(dim=1)
         )
 
@@ -76,7 +76,7 @@ class Additive(nn.Module):
         )
 
         self.classifier = nn.Sequential(
-            nn.Linear(self.M, 3),
+            nn.Linear(self.M, 4),
             nn.Sigmoid()
         )
 
